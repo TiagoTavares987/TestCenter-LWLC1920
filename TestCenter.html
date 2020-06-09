@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Test Center</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+</head>
+
+<body>
+
+    <h1>Projeto LWLC</h1>
+    <h2>Test Center</h2>
+
+    <br><br><br>
+
+    <div id="intro">
+        <p>Quando se sentir preparado carregue no botão começar.</p>
+        <p>Ao começar o teste um temporizador irá automaticamente começar.</p>
+        <p>Quando este acabar, o teste irá acabar e todas as perguntas não realizadas serão consideradas
+            não respondidas.
+        </p>
+    </div>
+    <div class="content">
+
+        <div id="time" class="time"></div>
+
+        <div id="quiz" class="d-none"></div>
+
+        <div id="result" class="d-none">
+            <strong>Resultado:</strong>
+            <span id="correct_answers"></span>
+        </div>
+
+        <div>
+            <button type="button" id="btn_start" class="mt-10">Começar</button>
+            <button type="button" id="btn_previous" class="mt-10 d-none">Anterior</button>
+            <button type="button" id="btn_next" class="mt-10 d-none">Seguinte</button>
+            <button type="button" id="btn_finish" class="mt-10 d-none">Terminar o teste</button>
+        </div>
+    </div>
+    <script src="base.js"></script>
+</body>
+</html>
