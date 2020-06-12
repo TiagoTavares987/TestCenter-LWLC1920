@@ -1,0 +1,34 @@
+.d-none{
+    display: none;
+}
+.valid{
+    border:  2px solid green;
+}
+.invalid{
+    border: 2px solid red;
+}
+.ml-20{
+    margin-left: 20px;
+
+}
+.mr-10{
+    margin-right: 10px;
+    
+}
+.mt-10{
+    margin-top: 10px;
+}
+.font-weight-bold{
+    font-weight: bold;
+}
+.text-success {
+    color: green;
+
+}
+.text-danger {
+    color: red;
+    
+}
+.content {
+    width: 30%;
+}
