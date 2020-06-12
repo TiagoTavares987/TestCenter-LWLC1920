@@ -1,16 +1,20 @@
-var minute = 0.1;
+var minute = 0.6;
+let classificação = 0;
+let classificacao_total = 0;
+let perguntas_parciais = 0;
+let perguntas_erradas = 0;
 var timer;
 var endTime;
 
-// Type: single para escolhas unica e verdadeiro e falso
-// * Single -> Escolha unica e verdadeiro e falso
-// * Multiple -> Para checkboxes (Answer passa a ser um array) (O tamanho do array são as respostas corretas)
-// * Type -> Para ser o user a escrever (Answer também pode passar a ser um array)
+// type
+// * single -> Escolha unica e verdadeiro e falso
+// * multiple -> Para checkboxes (Answer passa a ser um array) (O tamanho do array são as respostas corretas)
+// * text -> Para ser o user a escrever (Answer também pode passar a ser um array)
 const questions = [
-    '{"id":1,"type":"multiple","question":"Which planet in our solar system is closest to the sun?","choices":["Mars","Mercury","Jupiter"],"answer":["Mars","Mercury"]}',
-    '{"id": 2, "question": "Which actor played Richard III in the 1995 British film drama of the same title?", "choices": ["Ian McKellen", "Partrick Stewart", "Elijah Wood"],"answer": "Ian McKellen"}',
-    '{"id": 3, "question": "Which Marvel superhero, also known as Steve Rogers, made his first appearance in March 1941?","choices": ["Hulk", "Iron Man", "Captain America"], "answer": "Captain America" }',
-    '{"id": 4, "question": "Which English football club play at Roots Hall?", "choices": ["Liverpool", "Southend United", "Wolverhampton"], "answer": "Southend United" }',
+    '{"id":1,"type":"multiple","question":"As respostas um e dois são as corretas","mark":25,"choices":["Um","Dois","Três"],"answer":["Um","Dois"]}',
+    '{"id":2,"question":"Olá [1], [2]","type":"text","mark":20,"answers":["mundo","como estás"]}',
+    '{"id":3,"question":"O Cristiano Ronaldo é o melhor do mundo?","mark":35,"choices":["Verdadeiro","Falso"],"answer":"Verdadeiro"}',
+    '{"id":4,"question":"Which English football club play at Roots Hall?","mark":20,"choices":["Liverpool","Southend United","Wolverhampton"],"answer":"Southend United"}',
 ];
 
 var totalQuestions = questions.length;
@@ -25,17 +29,20 @@ $('#btn_previous').click(previousQuestion);
 for (let i = 0; i < questions.length; i++) {
     let obj = JSON.parse(questions[i]);
     console.log(obj.question);
+    classificacao_total += obj.mark;
 
     $('#quiz').append(
         $(document.createElement('div')).attr('id', 'question_' + obj.id)
     );
-
-    $('#question_' + obj.id).append(
-        $(document.createElement('p'))
-            .attr('id', obj.id)
-            .text(obj.question)
-            .addClass('font-weight-bold')
-    );
+    $('#question_' + obj.id).data('mark', obj.mark);
+    if (obj.type != 'text') {
+        $('#question_' + obj.id).append(
+            $(document.createElement('p'))
+                .attr('id', obj.id)
+                .text(obj.question)
+                .addClass('font-weight-bold')
+        );
+    }
     if (obj.type == 'multiple') {
         $('#question_' + obj.id).append(
             $(document.createElement('p')).text(
@@ -43,7 +50,6 @@ for (let i = 0; i < questions.length; i++) {
             )
         );
     }
-
     if (i != 0) {
         $('#question_' + obj.id).toggleClass('d-none');
     }
@@ -76,6 +82,36 @@ for (let i = 0; i < questions.length; i++) {
                     );
             }
             break;
+        case 'text':
+            $('#question_' + obj.id)
+                .data('maxAnswers', obj.answers.length)
+                .data('currAnswers', 0)
+                .data('rightAnswers', 0);
+            let question_text = obj.question;
+            for (let j = 0; j < obj.answers.length; j++) {
+                question_text = question_text.replace(
+                    '[' + (j + 1) + ']',
+                    '<input id="' +
+                        j +
+                        '" type="text" name="' +
+                        obj.id +
+                        '" onfocusout="verifyText(this)" data-correct-text="' +
+                        obj.answers[j] +
+                        '">'
+                );
+            }
+            $('#question_' + obj.id).append(
+                $(document.createElement('p'))
+                    .attr('id', obj.id)
+                    .html(question_text)
+                    .addClass('font-weight-bold')
+            );
+            $('#question_' + obj.id).append(
+                $(document.createElement('p')).text(
+                    'Quando a caixa de texto deixar de ser selecionada, é considerada essa a resposta final'
+                )
+            );
+            break;
         default:
             for (let j = 0; j < obj.choices.length; j++) {
                 console.log(obj.choices[j]);
@@ -101,6 +137,40 @@ for (let i = 0; i < questions.length; i++) {
     }
 }
 
+function verifyText(el) {
+    let nAnswers = $('#question_' + el.name).data('currAnswers');
+    $('#question_' + el.name).data('currAnswers', nAnswers + 1);
+    let maxAnswers = $('#question_' + el.name).data('maxAnswers');
+    let rightAnswers = $('#question_' + el.name).data('rightAnswers');
+    $(el).prop('disabled', true);
+
+    if (
+        $(el).val().toLowerCase().trim() ==
+        $(el).data('correct-text').toLowerCase().trim()
+    ) {
+        $(el).css('background-color', 'lime');
+        $('#question_' + el.name).data('rightAnswers', rightAnswers + 1);
+        classificação += $('#question_' + el.name).data('mark') / maxAnswers;
+    } else {
+        $(el).css('background-color', 'red');
+    }
+
+    if ($('#question_' + el.name).data('currAnswers') == maxAnswers) {
+        if ($('#question_' + el.name).data('rightAnswers') == maxAnswers) {
+            correctAnswers++;
+        }
+        if (
+            $('#question_' + el.name).data('rightAnswers') > 0 &&
+            $('#question_' + el.name).data('rightAnswers') < maxAnswers
+        ) {
+            perguntas_parciais++;
+        }
+        if ($('#question_' + el.name).data('rightAnswers') == 0) {
+            perguntas_erradas++;
+        }
+    }
+}
+
 function startQuiz() {
     //Faz com que o quiz fique visível
     $('#quiz').toggleClass('d-none');
@@ -120,6 +190,7 @@ function multipleAnswer() {
 
     if (this.value == '1') {
         $('#lbl_' + this.name + '_' + this.id).addClass('text-success');
+        classificação += $('#question_' + this.name).data('mark') / maxAnswers;
         $('#question_' + this.name).data('rightAnswers', rightAnswers + 1);
     } else {
         $('#lbl_' + this.name + '_' + this.id).addClass('text-danger');
@@ -132,8 +203,16 @@ function multipleAnswer() {
         if ($('#question_' + this.name).data('rightAnswers') == maxAnswers) {
             correctAnswers++;
         }
+        if (
+            $('#question_' + this.name).data('rightAnswers') > 0 &&
+            $('#question_' + this.name).data('rightAnswers') < maxAnswers
+        ) {
+            perguntas_parciais++;
+        }
+        if ($('#question_' + this.name).data('rightAnswers') == 0) {
+            perguntas_erradas++;
+        }
     }
-
     //Verifica se é a resposta correta
 }
 
@@ -144,9 +223,11 @@ function singleAnswer() {
     //Verifica se é a resposta correta
     if (this.value == '1') {
         $('#lbl_' + this.name + '_' + this.id).addClass('text-success');
+        classificação += $('#question_' + this.name).data('mark');
         correctAnswers++; //Adiciona 1 ao contador das respostas corretas
     } else {
         $('#lbl_' + this.name + '_' + this.id).addClass('text-danger');
+        perguntas_erradas++;
     }
 }
 
@@ -178,11 +259,39 @@ function finishQuiz() {
     $('#btn_previous,#btn_finish,#time,#question_' + currentQuestion).addClass(
         'd-none'
     );
-    $('#time').toggleClass('d-none');
+    $('#time').addClass('d-none');
     $('#result').toggleClass('d-none');
     //Parar o temporizador e esconder o temporizador
     clearInterval(timer);
-    $('#correct_answers').text(correctAnswers + '/' + totalQuestions);
+    console.log(classificação);
+    $('#result').append(
+        $(document.createElement('p')).text(
+            correctAnswers +
+                ' respostas corretas' +
+                (perguntas_parciais > 0
+                    ? ' e ' + perguntas_parciais + ' parcialmente corretas'
+                    : '')
+        )
+    );
+    $('#result').append(
+        $(document.createElement('p')).text(
+            perguntas_erradas + ' respostas incorretas'
+        )
+    );
+    $('#result').append(
+        $(document.createElement('p')).text(
+            totalQuestions -
+                perguntas_erradas -
+                perguntas_parciais -
+                correctAnswers +
+                ' perguntas não respondidas'
+        )
+    );
+    $('#result').append(
+        $(document.createElement('p')).text(
+            classificação + ' pontos de um máximo de ' + classificacao_total
+        )
+    );
 }
 
 function countDown() {
@@ -204,11 +313,12 @@ function countDown() {
         clearInterval(timer); //Faz com que o temporizador pare
         $('#time').text('Acabou o tempo!');
 
-        $(
-            '#btn_previous,#time,#btn_next,#question_' + currentQuestion
-        ).addClass('d-none');
+        $('#btn_previous,#btn_next,#question_' + currentQuestion).addClass(
+            'd-none'
+        );
 
         //Chama a função para acabar o quiz
         finishQuiz();
+        $('#time').removeClass('d-none');
     }
 }

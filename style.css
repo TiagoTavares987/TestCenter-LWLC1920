@@ -32,3 +32,9 @@
 .content {
     width: 30%;
 }
+
+input[type="text"] {
+    display: inline;
+    border: none;
+    background-color: aquamarine;
+}
