@@ -6,11 +6,28 @@ let perguntas_erradas = 0;
 var timer;
 var endTime;
 
-// type
-// * single -> Escolha unica e verdadeiro e falso
-// * multiple -> Para checkboxes (Answer passa a ser um array) (O tamanho do array são as respostas corretas)
-// * text -> Para ser o user a escrever (Answer também pode passar a ser um array)
-// * mark -> representa a cotação da pergunta
+//JQuery Notas:
+// x.append: Adiciona um elemento HTML(h1, p) dentro do elemento x
+// x.text: Muda o texto de x
+// x.html: Muda o HTML dentro do elemento x
+// x.addClass: Adiciona uma classe CSS no elemento x
+// x.removeClass: Remove uma classe CSS no elemento x
+// x.toggleClass: Caso x tenha a classe passada á função remove a classe, se não tiver a classe adiciona-a
+// x.attr: Se a função for usada com um só valor retorna algo correspondente a esse valor
+// ou seja x.attr('name') retorna o nome do elemento x
+// Se por exemplo a função for usada da seguinte forma x.attr('name', 'teste')
+// Muda o nome do elemento x para teste
+// x.data: Igual a x.attr() mas permite ao utilizador criar propriedades para utilização própria
+// x.click(func): Quando o utilizador carrega no elemento x, a função func é executada
+
+//Formato JSON:
+// ID: Número inteiro que identifica a pergunta
+// Type: single(Escolha única), multiple(Escolha Múltipla), text(O utilizador têm de preencher)
+// Mark: Número que representa a classificação da pergunta
+// Question: Enunciado da pergunta
+// Choices: Representa as escolhas para perguntas de escolha única ou múltipla
+// Answers: Pode ser valor único para questões de escolha única ou um array para questões de preencher e escolha múltipla
+
 const questions = [
     '{"id":1,"type":"multiple","question":"As respostas um e dois são as corretas","mark":25,"choices":["Um","Dois","Três"],"answer":["Um","Dois"]}',
     '{"id":2,"question":"Olá [1], [2]","type":"text","mark":20,"answers":["mundo","como estás"]}',
@@ -22,39 +39,45 @@ var totalQuestions = questions.length;
 var currentQuestion = 1;
 var correctAnswers = 0;
 
-$('#btn_start').click(startQuiz);
-$('#btn_next').click(nextQuestion);
-$('#btn_finish').click(finishQuiz);
-$('#btn_previous').click(previousQuestion);
+$('#btn_start').click(startQuiz); // Ver linha 21
+$('#btn_next').click(nextQuestion); // Ver linha 21
+$('#btn_finish').click(finishQuiz); // Ver linha 21
+$('#btn_previous').click(previousQuestion); // Ver linha 21
 
 for (let i = 0; i < questions.length; i++) {
+    //Converte JSON para código
     let obj = JSON.parse(questions[i]);
-    console.log(obj.question);
     classificacao_total += obj.mark;
-
-    //Cria um div para guardar a questão
+    //Cria um elemento div com id question_ e o índice do ciclo e faz append ao elemento quizz
+    //(linha 10)
     $('#quiz').append(
         $(document.createElement('div')).attr('id', 'question_' + obj.id)
     );
 
     //Guarda a classificação num atributo da pergunta para poder posteriormente
-    //utilizar
-    $('#question_' + obj.id).data('mark', obj.mark);
+    //utilizar(linha 20)
+    $('#question_' + obj.id).data('mark', obj.mark); //linha (20)
 
     // Se não for uma pergunta de texto adicionar o enunciado da pergunta
     //Pois as perguntas de texto são feitas de forma diferente
     if (obj.type != 'text') {
+        //Ao div da questão faz append(linha 10) a um parágrafo com id igual ao id da questão
+        // com texto(linha 11) igual ao enunciado da questão e com classe CSS(linha 13) que faz com
+        //que fique em negrito
         $('#question_' + obj.id).append(
             $(document.createElement('p'))
-                .attr('id', obj.id)
-                .text(obj.question)
-                .addClass('font-weight-bold')
+                .attr('id', obj.id) // linha 16
+                .text(obj.question) // linha 11
+                .addClass('font-weight-bold') // linha (13)
         );
     }
 
-    //Informa o utilizador o máximo de escolhas que pode escolher
     if (obj.type == 'multiple') {
+        //Se for uma questão de escolha multipla faz appenda um parágrafo
+        //que informa ao utilizador até quantas opções pode escolher
+        //linha 10
         $('#question_' + obj.id).append(
+            //linha 11
             $(document.createElement('p')).text(
                 'Escolha até ' + obj.answer.length + ' opções'
             )
@@ -63,16 +86,16 @@ for (let i = 0; i < questions.length; i++) {
 
     //Esconde todas as perguntas meno a primeira
     if (i != 0) {
-        $('#question_' + obj.id).toggleClass('d-none');
+        $('#question_' + obj.id).toggleClass('d-none'); // linha 15
     }
     switch (obj.type) {
         case 'multiple':
-            //Guarda na pergunta o máximo de respostas que o utilizador têm de responder
+            //Guarda no div pergunta o máximo de respostas que o utilizador têm de responder
             // as respostas que já respondeu e as respostas que acertou
             $('#question_' + obj.id)
-                .data('maxAnswers', obj.answer.length)
-                .data('currAnswers', 0)
-                .data('rightAnswers', 0);
+                .data('maxAnswers', obj.answer.length) //linha (20)
+                .data('currAnswers', 0) //linha (20)
+                .data('rightAnswers', 0); //linha (20)
             for (let j = 0; j < obj.choices.length; j++) {
                 console.log(obj.choices[j]);
                 //Cria as checkboxes
@@ -80,6 +103,9 @@ for (let i = 0; i < questions.length; i++) {
                 $('#question_' + obj.id)
                     .append(
                         $(document.createElement('input'))
+                            //linha 16
+                            //value é 1 se no array das respostas inclui
+                            //a resposta ue está a ser criada
                             .attr({
                                 id: j,
                                 name: obj.id,
@@ -88,14 +114,15 @@ for (let i = 0; i < questions.length; i++) {
                                     ? 1
                                     : 0,
                             })
-                            .click(multipleAnswer)
-                            .addClass('ml-20, mr-10')
+                            .click(multipleAnswer) //linha 21
+                            .addClass('ml-20, mr-10') // linha 13
                     )
                     //Cria o texto da resposta
+                    //linha 10
                     .append(
                         $(document.createElement('label'))
-                            .attr('id', 'lbl_' + obj.id + '_' + j)
-                            .text(obj.choices[j])
+                            .attr('id', 'lbl_' + obj.id + '_' + j) // linha 16
+                            .text(obj.choices[j]) //linha 11
                     );
             }
             break;
@@ -103,9 +130,9 @@ for (let i = 0; i < questions.length; i++) {
             //Guarda na pergunta o máximo de respostas que o utilizador têm de responder
             // as respostas que já respondeu e as respostas que acertou
             $('#question_' + obj.id)
-                .data('maxAnswers', obj.answers.length)
-                .data('currAnswers', 0)
-                .data('rightAnswers', 0);
+                .data('maxAnswers', obj.answers.length) //linha 20
+                .data('currAnswers', 0) // linha 20
+                .data('rightAnswers', 0); // linha 20
             let question_text = obj.question;
             for (let j = 0; j < obj.answers.length; j++) {
                 //Substitui o [j] em que j é o índice por
@@ -125,13 +152,15 @@ for (let i = 0; i < questions.length; i++) {
             //Cria a pergunta em si
             $('#question_' + obj.id).append(
                 $(document.createElement('p'))
-                    .attr('id', obj.id)
-                    .html(question_text)
-                    .addClass('font-weight-bold')
+                    .attr('id', obj.id) //linha 16
+                    .html(question_text) //linha 12
+                    .addClass('font-weight-bold') //linha 13
             );
             //Informa o utilizador de quando a resposta é verificada
+            //linha 10
             $('#question_' + obj.id).append(
                 $(document.createElement('p')).text(
+                    //linha 11
                     'Quando a caixa de texto deixar de ser selecionada, é considerada essa a resposta final'
                 )
             );
@@ -141,18 +170,21 @@ for (let i = 0; i < questions.length; i++) {
                 console.log(obj.choices[j]);
                 //Cria os butoẽs de radio para as escolhas únicas
                 $('#question_' + obj.id)
+                    //linha 10
                     .append(
                         $(document.createElement('input'))
+                            //linha 16
                             .attr({
                                 id: j,
                                 name: obj.id,
                                 type: 'radio',
                                 value: obj.answer == obj.choices[j] ? 1 : 0,
                             })
-                            .click(singleAnswer)
-                            .addClass('ml-20, mr-10')
+                            .click(singleAnswer) //linha 21
+                            .addClass('ml-20, mr-10') //linha 13
                     )
                     //Cria o texto correspondente a escolha única
+                    //linha 10
                     .append(
                         $(document.createElement('label'))
                             .attr('id', 'lbl_' + obj.id + '_' + j)
@@ -180,14 +212,14 @@ function verifyText(el) {
     //Verifica se o texto é igual ao correct-text que é um atributo que
     //guarda o texto correto
     if (
-        $(el).val().toLowerCase().trim() ==
-        $(el).data('correct-text').toLowerCase().trim()
+        $(el).val().toLowerCase().trim() == // faz com que o texto que utilizador escreveu fique em minúsculas e tira o espaço á frente se tiver
+        $(el).data('correct-text').toLowerCase().trim() //linha 20
     ) {
-        $(el).css('background-color', 'lime');
-        $('#question_' + el.name).data('rightAnswers', rightAnswers + 1);
-        classificação += $('#question_' + el.name).data('mark') / maxAnswers;
+        $(el).css('background-color', 'lime'); //muda a propriedade css 'background-color' para lima
+        $('#question_' + el.name).data('rightAnswers', rightAnswers + 1); //linha 20
+        classificação += $('#question_' + el.name).data('mark') / maxAnswers; //linha 20
     } else {
-        $(el).css('background-color', 'red');
+        $(el).css('background-color', 'red'); //muda a propriedade css 'background-color' para vermelho
     }
 
     //Se já tiver repsondido a todas as perguntas
@@ -195,15 +227,18 @@ function verifyText(el) {
     //Parcialmente correta se tiver respondido pelo menos uma correta
     //E errada se não tiver respondido a nada correta
     if ($('#question_' + el.name).data('currAnswers') == maxAnswers) {
+        //linha 20
         if ($('#question_' + el.name).data('rightAnswers') == maxAnswers) {
             correctAnswers++;
         }
         if (
+            //linha 20
             $('#question_' + el.name).data('rightAnswers') > 0 &&
             $('#question_' + el.name).data('rightAnswers') < maxAnswers
         ) {
             perguntas_parciais++;
         }
+        //linha 20
         if ($('#question_' + el.name).data('rightAnswers') == 0) {
             perguntas_erradas++;
         }
@@ -213,53 +248,58 @@ function verifyText(el) {
 function startQuiz() {
     //Faz com que o quiz e o butão seguinte fique visível,
     //Esconde a mensagem de introdução e o butão de start
-    $('#quiz').toggleClass('d-none');
-    $('#intro').toggleClass('d-none');
-    $('#btn_start').toggleClass('d-none');
-    $('#btn_next').removeClass('d-none');
+    $('#quiz').toggleClass('d-none'); //linha 15
+    $('#intro').toggleClass('d-none'); //linha 15
+    $('#btn_start').toggleClass('d-none'); //linha 15
+    $('#btn_next').removeClass('d-none'); //linha 14
 
-    endTime = new Date(new Date().getTime() + minute * 60000);
+    endTime = new Date(new Date().getTime() + minute * 60000); //Faz com que o tempo final do temporizador seja igual ao tempo em que o utilizador começou o quizz + o tempo máximo do temporizador
     timer = setInterval(countDown, 1000); // A cada 1000 nanosegundos chama a função countDown
 }
 
 function multipleAnswer() {
     //Guarda o número de respostas a que já respondeu, respostas que já acertou
     //e o máximo de respostas a que pode responder em variáveis
-    let nAnswers = $('#question_' + this.name).data('currAnswers');
+    let nAnswers = $('#question_' + this.name).data('currAnswers'); //linha 20
     //Incrementa o número de respostas a que já respondeu
     //Pois esta função só é chamada quando o utilizador responde
-    $('#question_' + this.name).data('currAnswers', nAnswers + 1);
-    let maxAnswers = $('#question_' + this.name).data('maxAnswers');
-    let rightAnswers = $('#question_' + this.name).data('rightAnswers');
+    $('#question_' + this.name).data('currAnswers', nAnswers + 1); //linha 20
+    let maxAnswers = $('#question_' + this.name).data('maxAnswers'); //linha 20
+    let rightAnswers = $('#question_' + this.name).data('rightAnswers'); //linha 20
 
     //Verifica a resposta
     if (this.value == '1') {
-        $('#lbl_' + this.name + '_' + this.id).addClass('text-success');
-        classificação += $('#question_' + this.name).data('mark') / maxAnswers;
-        $('#question_' + this.name).data('rightAnswers', rightAnswers + 1);
+        $('#lbl_' + this.name + '_' + this.id).addClass('text-success'); //linha 13
+        classificação += $('#question_' + this.name).data('mark') / maxAnswers; //linha 20
+        $('#question_' + this.name).data('rightAnswers', rightAnswers + 1); //linha 20
     } else {
-        $('#lbl_' + this.name + '_' + this.id).addClass('text-danger');
+        $('#lbl_' + this.name + '_' + this.id).addClass('text-danger'); //linha 13
     }
 
     //Se já tiver repsondido a todas as perguntas
     //Avalia corretamente a pergunta como correta se tiver respondido corretamente a todas
     //Parcialmente correta se tiver respondido pelo menos uma correta
     //E errada se não tiver respondido a nada correta
+    //linha 20
     if ($('#question_' + this.name).data('currAnswers') == maxAnswers) {
         //Se já tiver respondido até ao número de respostas que pede
         //Desativar o resto para não poder responder mais
+        //linha 15
         $('#question_' + this.name + ' :input').attr({
             disabled: true,
         });
+        //linha 20
         if ($('#question_' + this.name).data('rightAnswers') == maxAnswers) {
             correctAnswers++;
         }
         if (
+            //linha 20
             $('#question_' + this.name).data('rightAnswers') > 0 &&
             $('#question_' + this.name).data('rightAnswers') < maxAnswers
         ) {
             perguntas_parciais++;
         }
+        //linha 20
         if ($('#question_' + this.name).data('rightAnswers') == 0) {
             perguntas_erradas++;
         }
@@ -269,58 +309,62 @@ function multipleAnswer() {
 function singleAnswer() {
     //Desativa o resto das escolhas
     $('#question_' + this.name + ' :input').attr({
+        //linha 15
         disabled: true,
     });
     //Verifica se é a resposta correta
     if (this.value == '1') {
-        $('#lbl_' + this.name + '_' + this.id).addClass('text-success');
-        classificação += $('#question_' + this.name).data('mark');
+        $('#lbl_' + this.name + '_' + this.id).addClass('text-success'); // linha 13
+        classificação += $('#question_' + this.name).data('mark'); // linha 20
         correctAnswers++; //Adiciona 1 ao contador das respostas corretas
     } else {
-        $('#lbl_' + this.name + '_' + this.id).addClass('text-danger');
+        $('#lbl_' + this.name + '_' + this.id).addClass('text-danger'); //linha 13
         perguntas_erradas++;
     }
 }
 
 function nextQuestion() {
     //Esconde a questão atual e faz com que a próxima questão fique visível
-    $('#question_' + currentQuestion).addClass('d-none');
-    $('#question_' + (currentQuestion + 1)).removeClass('d-none');
+    $('#question_' + currentQuestion).addClass('d-none'); //linha 13
+    $('#question_' + (currentQuestion + 1)).removeClass('d-none'); //linha 14
     currentQuestion++;
     if (currentQuestion != totalQuestions) {
         //Faz com que o butão anterior e seguinte fiquem visível
-        $('#btn_next,#btn_previous').removeClass('d-none');
+        $('#btn_next,#btn_previous').removeClass('d-none'); //linha 14
     } else {
         //Faz o butão finish ficar vísivel se a questão atual for a última questão
         //Também esconde o butão next
-        $('#btn_finish').removeClass('d-none');
-        $('#btn_next').addClass('d-none');
+        $('#btn_finish').removeClass('d-none'); //linha 14
+        $('#btn_next').addClass('d-none'); //linha 13
     }
 }
 
 function previousQuestion() {
     //Esconde a questão atual e faz com que a anterior questão fique visível
-    $('#btn_finish,#question_' + currentQuestion).addClass('d-none');
-    $('#btn_next,#question_' + (currentQuestion - 1)).removeClass('d-none');
+    $('#btn_finish,#question_' + currentQuestion).addClass('d-none'); //linha 13
+    $('#btn_next,#question_' + (currentQuestion - 1)).removeClass('d-none'); //linha 14
     currentQuestion--;
     if (currentQuestion == 1) {
         //Faz com que o butão anterior fique escondido se estiver na primeira pergunta
-        $('#btn_previous').addClass('d-none');
+        $('#btn_previous').addClass('d-none'); //linha 13
     }
 }
 
 function finishQuiz() {
     //Esconde-te o butão finish, anterior, o temporizador e a questão atual
     $('#btn_previous,#btn_finish,#time,#question_' + currentQuestion).addClass(
+        //linha 13
         'd-none'
     );
 
-    $('#result').toggleClass('d-none');
+    $('#result').toggleClass('d-none'); //linha 15
     //Parar o temporizador e esconder o temporizador
     clearInterval(timer);
 
     //Só mostra as perguntas parciais se estiver respondido a alguma parcialmente
+    //linha 10
     $('#result').append(
+        //linha 11
         $(document.createElement('p')).text(
             correctAnswers +
                 ' respostas corretas' +
@@ -329,13 +373,17 @@ function finishQuiz() {
                     : '')
         )
     );
+    //linha 10
     $('#result').append(
+        //linha 11
         $(document.createElement('p')).text(
             perguntas_erradas + ' respostas incorretas'
         )
     );
     //Perguntas não respondidas = Total de Perguntas - Perguntas Erradas - Perguntas Parciais - Perguntas Corretas
+    //linha 10
     $('#result').append(
+        //linha 11
         $(document.createElement('p')).text(
             totalQuestions -
                 perguntas_erradas -
@@ -344,7 +392,9 @@ function finishQuiz() {
                 ' perguntas não respondidas'
         )
     );
+    //linha 10
     $('#result').append(
+        //linha 11
         $(document.createElement('p')).text(
             classificação + ' pontos de um máximo de ' + classificacao_total
         )
@@ -364,19 +414,20 @@ function countDown() {
     ); //Nanosegundos -> Minutos
     let seconds = Math.max(Math.floor((distance % (1000 * 60 * 60)) / 1000), 0); //Nanosegundos -> Segundos
 
-    $('#time').text(minutes + ':' + seconds);
+    $('#time').text(minutes + ':' + seconds); //linha 11
 
     if (distance <= 0) {
         clearInterval(timer); //Faz com que o temporizador pare
-        $('#time').text('Acabou o tempo!');
+        $('#time').text('Acabou o tempo!'); //linha 11
 
         //Esconde o butão anterior, próximo e a questão atual
         $('#btn_previous,#btn_next,#question_' + currentQuestion).addClass(
+            //linha 13
             'd-none'
         );
 
         //Chama a função para acabar o quiz
         finishQuiz();
-        $('#time').removeClass('d-none');
+        $('#time').removeClass('d-none'); //linha 14
     }
 }
