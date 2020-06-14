@@ -29,12 +29,61 @@
     color: red;
     
 }
-.content {
-    width: 30%;
+
+body {
+    width: 75%;
+    background-color: bisque;
 }
 
 input[type="text"] {
     display: inline;
     border: none;
     background-color: aquamarine;
+}
+
+#time {
+    float: right;
+    position: relative;
+}
+
+#perguntas {
+    float: left;
+    position: relative;
+}
+
+#header {
+    position: relative;
+    top: -50px;
+}
+
+#result {
+    text-align: center;
+    margin: 0 auto;
+}
+
+#resultado {
+    font-weight: bold;
+}
+
+#quiz, #intro {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+#btn_next {
+    float: right;
+}
+
+#btn_finish {
+    float: right;
+}
+
+#title {
+    text-align: center;
+    margin-bottom: 75px;
+}
+
+#btn_start {
+    position: absolute;
+    left: 37.5%;
 }

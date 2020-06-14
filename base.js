@@ -29,8 +29,8 @@ var endTime;
 // Answers: Pode ser valor único para questões de escolha única ou um array para questões de preencher e escolha múltipla
 
 const questions = [
-    '{"id":1,"type":"multiple","question":"As respostas um e dois são as corretas","mark":25,"choices":["Um","Dois","Três"],"answer":["Um","Dois"]}',
-    '{"id":2,"question":"Olá [1], [2]","type":"text","mark":20,"answers":["mundo","como estás"]}',
+    '{"id":1,"type":"multiple","question":"Como é que se diz bolacha em inglês?","mark":25,"choices":["Cookie","Biscuit","Boleich"],"answer":["Cookie","Biscuit"]}',
+    '{"id":2,"question":"Traduz a seguinte frase para português:\\n Hello Tiago, how are you? \\n [1] Tiago, [2]","type":"text","mark":20,"answers":["Olá","como estás"]}',
     '{"id":3,"question":"O Cristiano Ronaldo é o melhor do mundo?","mark":35,"choices":["Verdadeiro","Falso"],"answer":"Verdadeiro"}',
     '{"id":4,"question":"Which English football club play at Roots Hall?","mark":20,"choices":["Liverpool","Southend United","Wolverhampton"],"answer":"Southend United"}',
 ];
@@ -134,6 +134,10 @@ for (let i = 0; i < questions.length; i++) {
                 .data('currAnswers', 0) // linha 20
                 .data('rightAnswers', 0); // linha 20
             let question_text = obj.question;
+            while (question_text.includes('\n')) {
+                question_text = question_text.replace('\n', '<br>');
+            }
+
             for (let j = 0; j < obj.answers.length; j++) {
                 //Substitui o [j] em que j é o índice por
                 //um input de texto para o utilizador meter a resposta
@@ -252,6 +256,7 @@ function startQuiz() {
     $('#intro').toggleClass('d-none'); //linha 15
     $('#btn_start').toggleClass('d-none'); //linha 15
     $('#btn_next').removeClass('d-none'); //linha 14
+    $('#perguntas').text('1/' + totalQuestions);
 
     endTime = new Date(new Date().getTime() + minute * 60000); //Faz com que o tempo final do temporizador seja igual ao tempo em que o utilizador começou o quizz + o tempo máximo do temporizador
     timer = setInterval(countDown, 1000); // A cada 1000 nanosegundos chama a função countDown
@@ -337,6 +342,7 @@ function nextQuestion() {
         $('#btn_finish').removeClass('d-none'); //linha 14
         $('#btn_next').addClass('d-none'); //linha 13
     }
+    $('#perguntas').text(currentQuestion + '/' + totalQuestions);
 }
 
 function previousQuestion() {
@@ -348,11 +354,15 @@ function previousQuestion() {
         //Faz com que o butão anterior fique escondido se estiver na primeira pergunta
         $('#btn_previous').addClass('d-none'); //linha 13
     }
+    $('#perguntas').text(currentQuestion + '/' + totalQuestions);
 }
 
 function finishQuiz() {
     //Esconde-te o butão finish, anterior, o temporizador e a questão atual
-    $('#btn_previous,#btn_finish,#time,#question_' + currentQuestion).addClass(
+    $(
+        '#perguntas,#btn_previous,#btn_finish,#time,#question_' +
+            currentQuestion
+    ).addClass(
         //linha 13
         'd-none'
     );
@@ -421,7 +431,9 @@ function countDown() {
         $('#time').text('Acabou o tempo!'); //linha 11
 
         //Esconde o butão anterior, próximo e a questão atual
-        $('#btn_previous,#btn_next,#question_' + currentQuestion).addClass(
+        $(
+            '#perguntas,#btn_previous,#btn_next,#question_' + currentQuestion
+        ).addClass(
             //linha 13
             'd-none'
         );
